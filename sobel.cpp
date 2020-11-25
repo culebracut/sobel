@@ -7,10 +7,38 @@
 using namespace cv;
 using namespace std;
 
+cv::Mat ssobel (cv::Mat image, int ksize, int scale, int delta, int ddepth)
+{
+  cv::Mat src, src_gray;
+  cv::Mat grad_x, grad_y;
+  cv::Mat abs_grad_x, abs_grad_y;
+  cv::Mat result;
+
+  // first blur
+  GaussianBlur(image, src, Size(3, 3), 0, 0, BORDER_DEFAULT);
+
+  // Convert grayscale
+  cvtColor(src, src_gray, COLOR_BGR2GRAY);
+
+  // Sobel on x,y
+  Sobel(src_gray, grad_x, ddepth, 1, 0, ksize, scale, delta, BORDER_DEFAULT);
+  Sobel(src_gray, grad_y, ddepth, 0, 1, ksize, scale, delta, BORDER_DEFAULT);
+
+  // converting back to CV_8U
+  convertScaleAbs(grad_x, abs_grad_x);
+  convertScaleAbs(grad_y, abs_grad_y);
+  
+  // weight for axis
+  addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, result);
+  
+  return result;
+}
+
+
 int main( int argc, char** argv )
 {
   cv::CommandLineParser parser(argc, argv,
-                               "{@input   |/data/images/greenscreen.png|input image}"
+                               "{@input   |/data/images/dog.jpg|input image}"
                                "{ksize   k|1|ksize (hit 'K' to increase its value at run time)}"
                                "{scale   s|1|scale (hit 'S' to increase its value at run time)}"
                                "{delta   d|0|delta (hit 'D' to increase its value at run time)}"
@@ -19,15 +47,15 @@ int main( int argc, char** argv )
   parser.printMessage();
   cout << "\nPress 'ESC' to exit program.\nPress 'R' to reset values ( ksize will be -1 equal to Scharr function )";
   // First we declare the variables we are going to use
-  Mat image,src, src_gray;
-  Mat grad;
+
   const String window_name = "Sobel Demo - Simple Edge Detector";
+  String imageName = parser.get<String>("@input");
   int ksize = parser.get<int>("ksize");
   int scale = parser.get<int>("scale");
   int delta = parser.get<int>("delta");
   int ddepth = CV_16S;
-  String imageName = parser.get<String>("@input");
-  // As usual we load our source image (src)
+
+  cv::Mat image, processedImage;
   image = imread( samples::findFile( imageName ), IMREAD_COLOR ); // Load an image
   // Check if image is loaded fine
   if( image.empty() )
@@ -35,22 +63,14 @@ int main( int argc, char** argv )
     printf("Error opening image: %s\n", imageName.c_str());
     return EXIT_FAILURE;
   }
+
   for (;;)
   {
     // Remove noise by blurring with a Gaussian filter ( kernel size = 3 )
-    GaussianBlur(image, src, Size(3, 3), 0, 0, BORDER_DEFAULT);
-    // Convert the image to grayscale
-    cvtColor(src, src_gray, COLOR_BGR2GRAY);
-    Mat grad_x, grad_y;
-    Mat abs_grad_x, abs_grad_y;
-    Sobel(src_gray, grad_x, ddepth, 1, 0, ksize, scale, delta, BORDER_DEFAULT);
-    Sobel(src_gray, grad_y, ddepth, 0, 1, ksize, scale, delta, BORDER_DEFAULT);
-    // converting back to CV_8U
-    convertScaleAbs(grad_x, abs_grad_x);
-    convertScaleAbs(grad_y, abs_grad_y);
-    addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad);
-    imshow(window_name, grad);
-    char key = (char)waitKey(0);
+    processedImage = ssobel(image, ksize, scale, delta, ddepth);
+
+    imshow(window_name, processedImage);
+    char key = (char)waitKey(1);
     if(key == 27)
     {
       return EXIT_SUCCESS;
