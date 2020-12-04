@@ -21,17 +21,17 @@ void ssobel (cv::Mat image, int ksize, int scale, int delta, int ddepth)
   cvtColor(image, src_gray, COLOR_BGR2GRAY);
 
   // Sobel on x,y
-  Sobel(src_gray, grad_x, ddepth, 1, 0, ksize, scale, delta, BORDER_DEFAULT);
-  Sobel(src_gray, grad_y, ddepth, 0, 1, ksize, scale, delta, BORDER_DEFAULT);
+  Sobel(image, grad_x, ddepth, 1, 0, ksize, scale, delta, BORDER_DEFAULT);
+  Sobel(image, grad_y, ddepth, 0, 1, ksize, scale, delta, BORDER_DEFAULT);
 
   // converting back to CV_8U
   convertScaleAbs(grad_x, abs_grad_x);
   convertScaleAbs(grad_y, abs_grad_y);
   
   // weight for axis
-  addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, result);
+  addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, image);
 
-  image = result;
+  //image = result;
   
   return;
 }
