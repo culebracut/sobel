@@ -7,7 +7,7 @@
 using namespace cv;
 using namespace std;
 
-cv::Mat ssobel (cv::Mat image, int ksize, int scale, int delta, int ddepth)
+void ssobel (cv::Mat image, int ksize, int scale, int delta, int ddepth)
 {
   cv::Mat src, src_gray;
   cv::Mat grad_x, grad_y;
@@ -15,10 +15,10 @@ cv::Mat ssobel (cv::Mat image, int ksize, int scale, int delta, int ddepth)
   cv::Mat result;
 
   // first blur
-  GaussianBlur(image, src, Size(3, 3), 0, 0, BORDER_DEFAULT);
+  GaussianBlur(image, image, Size(13, 13), 0, 0, BORDER_DEFAULT);
 
   // Convert grayscale
-  cvtColor(src, src_gray, COLOR_BGR2GRAY);
+  cvtColor(image, src_gray, COLOR_BGR2GRAY);
 
   // Sobel on x,y
   Sobel(src_gray, grad_x, ddepth, 1, 0, ksize, scale, delta, BORDER_DEFAULT);
@@ -30,8 +30,10 @@ cv::Mat ssobel (cv::Mat image, int ksize, int scale, int delta, int ddepth)
   
   // weight for axis
   addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, result);
+
+  image = result;
   
-  return result;
+  return;
 }
 
 
@@ -55,7 +57,7 @@ int main( int argc, char** argv )
   int delta = parser.get<int>("delta");
   int ddepth = CV_16S;
 
-  cv::Mat image, processedImage;
+  cv::Mat image;
   image = imread( samples::findFile( imageName ), IMREAD_COLOR ); // Load an image
   // Check if image is loaded fine
   if( image.empty() )
@@ -66,10 +68,11 @@ int main( int argc, char** argv )
 
   for (;;)
   {
+  image = imread( samples::findFile( imageName ), IMREAD_COLOR ); // Load an image
     // Remove noise by blurring with a Gaussian filter ( kernel size = 3 )
-    processedImage = ssobel(image, ksize, scale, delta, ddepth);
+    ssobel(image, ksize, scale, delta, ddepth);
 
-    imshow(window_name, processedImage);
+    imshow(window_name, image);
     char key = (char)waitKey(1);
     if(key == 27)
     {
