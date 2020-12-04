@@ -19,18 +19,19 @@ void ssobel (cv::Mat image, int ksize, int scale, int delta, int ddepth)
 
   /* rectangle for cropped objects */
   cv::Rect crop_rect;
-  int x = 200;
-  int y = 200;
-  int width = 500;
-  int height = 300;
+  int x = 600;
+  int y = 400;
+  int width = 600;
+  int height = 400;
   crop_rect = cv::Rect (x, y, width, height);
 
   // first blur
   GaussianBlur(image(crop_rect), image(crop_rect), Size(blur_mask_width, blur_mask_height), 0, 0, BORDER_DEFAULT);
+  rectangle(image,crop_rect,Scalar(255,0,0),1,8,0);
   //GaussianBlur(image, image, Size(15, 15), 0, 0, BORDER_DEFAULT);
 
   // Convert grayscale
-  cvtColor(image, src_gray, COLOR_BGR2GRAY);
+  //cvtColor(image, src_gray, COLOR_BGR2GRAY);
 
   // Sobel on x,y
   Sobel(image, grad_x, ddepth, 1, 0, ksize, scale, delta, BORDER_DEFAULT);
@@ -70,21 +71,19 @@ int main( int argc, char** argv )
   int ddepth = CV_16S;
 
   cv::Mat image;
-  image = imread( samples::findFile( imageName ), IMREAD_COLOR ); // Load an image
-  // Check if image is loaded fine
-  if( image.empty() )
-  {
-    printf("Error opening image: %s\n", imageName.c_str());
-    return EXIT_FAILURE;
-  }
+  VideoCapture cap("file:////usr/src/jetson_multimedia_api/data/Video/sample_outdoor_car_1080p_10fps.h264"); 
 
   for (;;)
   {
-  image = imread( samples::findFile( imageName ), IMREAD_COLOR ); // Load an image
-    // Remove noise by blurring with a Gaussian filter ( kernel size = 3 )
+    // grab a frame
+    cap >> image;
+
+    // apply Gaussian blur and Sobel edge detector on ROI
     ssobel(image, ksize, scale, delta, ddepth);
 
+    //
     imshow(window_name, image);
+    
     char key = (char)waitKey(1);
     if(key == 27)
     {
@@ -109,5 +108,8 @@ int main( int argc, char** argv )
       delta =  0;
     }
   }
+
+  cap.release();
+
   return EXIT_SUCCESS;
 }
