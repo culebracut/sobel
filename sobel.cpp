@@ -14,8 +14,20 @@ void ssobel (cv::Mat image, int ksize, int scale, int delta, int ddepth)
   cv::Mat abs_grad_x, abs_grad_y;
   cv::Mat result;
 
+  int blur_mask_width = 9;
+  int blur_mask_height = 9;
+
+  /* rectangle for cropped objects */
+  cv::Rect crop_rect;
+  int x = 200;
+  int y = 200;
+  int width = 500;
+  int height = 300;
+  crop_rect = cv::Rect (x, y, width, height);
+
   // first blur
-  GaussianBlur(image, image, Size(13, 13), 0, 0, BORDER_DEFAULT);
+  GaussianBlur(image(crop_rect), image(crop_rect), Size(blur_mask_width, blur_mask_height), 0, 0, BORDER_DEFAULT);
+  //GaussianBlur(image, image, Size(15, 15), 0, 0, BORDER_DEFAULT);
 
   // Convert grayscale
   cvtColor(image, src_gray, COLOR_BGR2GRAY);
