@@ -22,27 +22,26 @@ void ssobel (cv::Mat image, int ksize, int scale, int delta, int ddepth)
   int x = 600;
   int y = 400;
   int width = 600;
-  int height = 400;
+  int height = 600;
   crop_rect = cv::Rect (x, y, width, height);
 
   // first blur
   GaussianBlur(image(crop_rect), image(crop_rect), Size(blur_mask_width, blur_mask_height), 0, 0, BORDER_DEFAULT);
   rectangle(image,crop_rect,Scalar(255,0,0),1,8,0);
-  //GaussianBlur(image, image, Size(15, 15), 0, 0, BORDER_DEFAULT);
 
   // Convert grayscale
-  //cvtColor(image, src_gray, COLOR_BGR2GRAY);
+  // cvtColor(image, src_gray, COLOR_BGR2GRAY);
 
   // Sobel on x,y
-  Sobel(image, grad_x, ddepth, 1, 0, ksize, scale, delta, BORDER_DEFAULT);
-  Sobel(image, grad_y, ddepth, 0, 1, ksize, scale, delta, BORDER_DEFAULT);
+  Sobel(image(crop_rect), grad_x, ddepth, 1, 0, ksize, scale, delta, BORDER_DEFAULT);
+  Sobel(image(crop_rect), grad_y, ddepth, 0, 1, ksize, scale, delta, BORDER_DEFAULT);
 
   // converting back to CV_8U
   convertScaleAbs(grad_x, abs_grad_x);
   convertScaleAbs(grad_y, abs_grad_y);
   
   // weight for axis
-  addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, image);
+  addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, image(crop_rect));
 
   //image = result;
   
@@ -71,8 +70,9 @@ int main( int argc, char** argv )
   int ddepth = CV_16S;
 
   cv::Mat image;
-  VideoCapture cap("file:////usr/src/jetson_multimedia_api/data/Video/sample_outdoor_car_1080p_10fps.h264"); 
-
+  VideoCapture cap("file:////usr/src/jetson_multimedia_api/data/Video/sample_outdoor_car_1080p_10fps.h264");
+  //VideoCapture cap("rtsp://admin:lemonlime@10.0.0.19:554/h264Preview_01_main"); 
+ 
   for (;;)
   {
     // grab a frame
@@ -91,7 +91,7 @@ int main( int argc, char** argv )
     }
     if (key == 'k' || key == 'K')
     {
-      ksize = ksize < 30 ? ksize+2 : -1;
+      ksize = ksize < 30 ? ksize++ : 1;
     }
     if (key == 's' || key == 'S')
     {
@@ -104,7 +104,7 @@ int main( int argc, char** argv )
     if (key == 'r' || key == 'R')
     {
       scale =  1;
-      ksize = -1;
+      ksize = 1;
       delta =  0;
     }
   }
